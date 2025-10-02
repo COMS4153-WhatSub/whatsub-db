@@ -12,7 +12,7 @@ DB_CONFIG = {
     'host': '34.121.216.146',
     'user': os.getenv('DB_USER', 'root'),
     'password': os.getenv('DB_PASSWORD', ''),
-    'database': os.getenv('DB_NAME', 'whatsup')
+    'database': os.getenv('DB_NAME', 'whatsub')
 }
 
 db = DatabaseHandler(DB_CONFIG)
@@ -235,4 +235,4 @@ def health_check():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, host='0.0.0.0', port=5000)
+    app.run(debug=True, host='127.0.0.1', port=5000)

@@ -5,7 +5,7 @@ from datetime import datetime
 
 
 class DatabaseHandler:
-    """Database handler for WhatsUp subscription management system"""
+    """Database handler for WhatSub subscription management system"""
 
     def __init__(self, config: Dict[str, str]):
         """

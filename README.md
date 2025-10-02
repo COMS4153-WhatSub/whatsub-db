@@ -1,4 +1,4 @@
-# WhatsUp Database Handler
+# WhatSub Database Handler
 
 A Python-based database handler for managing user subscriptions and reminders. This service provides RESTful API endpoints to handle CRUD operations for users, subscriptions, and reminders using a MySQL database.
 
@@ -98,7 +98,7 @@ Stores reminders for subscriptions.
 1. Clone the repository:
 ```bash
 git clone <repository-url>
-cd whatsup-db
+cd whatsub-db
 ```
 
 2. Install dependencies:
@@ -110,7 +110,7 @@ pip install -r requirements.txt
 ```bash
 DB_USER=your_username
 DB_PASSWORD=your_password
-DB_NAME=whatsup
+DB_NAME=whatsub
 ```
 
 4. Initialize the database schema:
@@ -176,7 +176,7 @@ Content-Type: application/json
   "user_id": 1,
   "name": "Netflix",
   "url": "https://netflix.com",
-  "account": "user@example.com",
+  "account": "john@example.com",
   "billing_date": "2025-10-15",
   "price": 15.99
 }
@@ -289,7 +289,7 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 
 The application connects to the MySQL database at:
 - **Host**: `34.121.216.146`
-- **Database**: `whatsup` (configurable via `.env`)
+- **Database**: `whatsub` (configurable via `.env`)
 - **User**: Set in `.env` file
 - **Password**: Set in `.env` file
 
@@ -326,7 +326,7 @@ Error responses include a JSON object with an error message:
 ## Project Structure
 
 ```
-whatsup-db/
+whatsub-db/
 ├── app.py              # Flask application with API routes
 ├── db_handler.py       # Database handler class
 ├── schema.sql          # Database schema definition

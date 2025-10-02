@@ -1,8 +1,8 @@
--- WhatsUp Database Schema
+-- whatsub Database Schema
 -- Database for managing user subscriptions and reminders
 
-CREATE DATABASE IF NOT EXISTS whatsup;
-USE whatsup;
+CREATE DATABASE IF NOT EXISTS whatsub;
+USE whatsub;
 
 -- User Table
 -- Stores user information
