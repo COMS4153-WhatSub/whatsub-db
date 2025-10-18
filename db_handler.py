@@ -2,6 +2,7 @@ import mysql.connector
 from mysql.connector import Error
 from typing import Optional, Dict, List, Any
 from datetime import datetime
+import uuid
 
 
 class DatabaseHandler:
@@ -62,7 +63,7 @@ class DatabaseHandler:
             cursor.close()
 
     # User Operations
-    def create_user(self, username: str, email: str, phone: Optional[str] = None) -> int:
+    def create_user(self, username: str, email: str, phone: Optional[str] = None) -> str:
         """
         Create a new user
 
@@ -72,25 +73,27 @@ class DatabaseHandler:
             phone: User's phone number (optional)
 
         Returns:
-            Created user ID
+            Created user ID (UUID)
         """
+        user_id = str(uuid.uuid4())
         query = """
-            INSERT INTO user (username, email, phone, created_at)
-            VALUES (%s, %s, %s, %s)
+            INSERT INTO users (user_id, username, email, phone, created_at)
+            VALUES (%s, %s, %s, %s, %s)
         """
-        return self.execute_query(query, (username, email, phone, datetime.now()))
+        self.execute_query(query, (user_id, username, email, phone, datetime.now()))
+        return user_id
 
-    def get_user(self, user_id: int) -> Optional[Dict]:
+    def get_user(self, user_id: str) -> Optional[Dict]:
         """
         Get user by ID
 
         Args:
-            user_id: User ID
+            user_id: User ID (UUID)
 
         Returns:
             User data dictionary or None
         """
-        query = "SELECT * FROM user WHERE user_id = %s"
+        query = "SELECT * FROM users WHERE user_id = %s"
         result = self.execute_query(query, (user_id,), fetch=True)
         return result[0] if result else None
 
@@ -101,16 +104,16 @@ class DatabaseHandler:
         Returns:
             List of user data dictionaries
         """
-        query = "SELECT * FROM user ORDER BY created_at DESC"
+        query = "SELECT * FROM users ORDER BY created_at DESC"
         return self.execute_query(query, fetch=True)
 
-    def update_user(self, user_id: int, username: Optional[str] = None,
+    def update_user(self, user_id: str, username: Optional[str] = None,
                    email: Optional[str] = None, phone: Optional[str] = None):
         """
         Update user information
 
         Args:
-            user_id: User ID
+            user_id: User ID (UUID)
             username: New username (optional)
             email: New email (optional)
             phone: New phone (optional)
@@ -132,41 +135,41 @@ class DatabaseHandler:
             return
 
         params.append(user_id)
-        query = f"UPDATE user SET {', '.join(updates)} WHERE user_id = %s"
+        query = f"UPDATE users SET {', '.join(updates)} WHERE user_id = %s"
         self.execute_query(query, tuple(params))
 
-    def delete_user(self, user_id: int):
+    def delete_user(self, user_id: str):
         """
         Delete user and all associated data
 
         Args:
-            user_id: User ID
+            user_id: User ID (UUID)
         """
         # Delete reminders for user's subscriptions
         query = """
-            DELETE r FROM reminder r
-            INNER JOIN subscription s ON r.subscription_id = s.subscription_id
+            DELETE r FROM reminders r
+            INNER JOIN subscriptions s ON r.subscription_id = s.subscription_id
             WHERE s.user_id = %s
         """
         self.execute_query(query, (user_id,))
 
         # Delete user's subscriptions
-        query = "DELETE FROM subscription WHERE user_id = %s"
+        query = "DELETE FROM subscriptions WHERE user_id = %s"
         self.execute_query(query, (user_id,))
 
         # Delete user
-        query = "DELETE FROM user WHERE user_id = %s"
+        query = "DELETE FROM users WHERE user_id = %s"
         self.execute_query(query, (user_id,))
 
     # Subscription Operations
-    def create_subscription(self, user_id: int, name: str, url: Optional[str] = None,
+    def create_subscription(self, user_id: str, name: str, url: Optional[str] = None,
                           account: Optional[str] = None, billing_date: Optional[str] = None,
                           price: Optional[float] = None) -> int:
         """
         Create a new subscription
 
         Args:
-            user_id: User ID
+            user_id: User ID (UUID)
             name: Subscription name
             url: Subscription URL (optional)
             account: Account identifier (optional)
@@ -177,7 +180,7 @@ class DatabaseHandler:
             Created subscription ID
         """
         query = """
-            INSERT INTO subscription (user_id, name, url, account, billing_date, price, created_at)
+            INSERT INTO subscriptions (user_id, name, url, account, billing_date, price, created_at)
             VALUES (%s, %s, %s, %s, %s, %s, %s)
         """
         return self.execute_query(query, (user_id, name, url, account, billing_date, price, datetime.now()))
@@ -192,21 +195,21 @@ class DatabaseHandler:
         Returns:
             Subscription data dictionary or None
         """
-        query = "SELECT * FROM subscription WHERE subscription_id = %s"
+        query = "SELECT * FROM subscriptions WHERE subscription_id = %s"
         result = self.execute_query(query, (subscription_id,), fetch=True)
         return result[0] if result else None
 
-    def get_user_subscriptions(self, user_id: int) -> List[Dict]:
+    def get_user_subscriptions(self, user_id: str) -> List[Dict]:
         """
         Get all subscriptions for a user
 
         Args:
-            user_id: User ID
+            user_id: User ID (UUID)
 
         Returns:
             List of subscription data dictionaries
         """
-        query = "SELECT * FROM subscription WHERE user_id = %s ORDER BY created_at DESC"
+        query = "SELECT * FROM subscriptions WHERE user_id = %s ORDER BY created_at DESC"
         return self.execute_query(query, (user_id,), fetch=True)
 
     def update_subscription(self, subscription_id: int, name: Optional[str] = None,
@@ -246,7 +249,7 @@ class DatabaseHandler:
             return
 
         params.append(subscription_id)
-        query = f"UPDATE subscription SET {', '.join(updates)} WHERE subscription_id = %s"
+        query = f"UPDATE subscriptions SET {', '.join(updates)} WHERE subscription_id = %s"
         self.execute_query(query, tuple(params))
 
     def delete_subscription(self, subscription_id: int):
@@ -257,11 +260,11 @@ class DatabaseHandler:
             subscription_id: Subscription ID
         """
         # Delete associated reminders
-        query = "DELETE FROM reminder WHERE subscription_id = %s"
+        query = "DELETE FROM reminders WHERE subscription_id = %s"
         self.execute_query(query, (subscription_id,))
 
         # Delete subscription
-        query = "DELETE FROM subscription WHERE subscription_id = %s"
+        query = "DELETE FROM subscriptions WHERE subscription_id = %s"
         self.execute_query(query, (subscription_id,))
 
     # Reminder Operations
@@ -280,7 +283,7 @@ class DatabaseHandler:
             Created reminder ID
         """
         query = """
-            INSERT INTO reminder (subscription_id, reminder_type, reminder_date, message, is_sent, created_at)
+            INSERT INTO reminders (subscription_id, reminder_type, reminder_date, message, is_sent, created_at)
             VALUES (%s, %s, %s, %s, %s, %s)
         """
         return self.execute_query(query, (subscription_id, reminder_type, reminder_date, message, False, datetime.now()))
@@ -295,7 +298,7 @@ class DatabaseHandler:
         Returns:
             Reminder data dictionary or None
         """
-        query = "SELECT * FROM reminder WHERE reminder_id = %s"
+        query = "SELECT * FROM reminders WHERE reminder_id = %s"
         result = self.execute_query(query, (reminder_id,), fetch=True)
         return result[0] if result else None
 
@@ -309,22 +312,22 @@ class DatabaseHandler:
         Returns:
             List of reminder data dictionaries
         """
-        query = "SELECT * FROM reminder WHERE subscription_id = %s ORDER BY reminder_date ASC"
+        query = "SELECT * FROM reminders WHERE subscription_id = %s ORDER BY reminder_date ASC"
         return self.execute_query(query, (subscription_id,), fetch=True)
 
-    def get_user_reminders(self, user_id: int) -> List[Dict]:
+    def get_user_reminders(self, user_id: str) -> List[Dict]:
         """
         Get all reminders for a user's subscriptions
 
         Args:
-            user_id: User ID
+            user_id: User ID (UUID)
 
         Returns:
             List of reminder data dictionaries
         """
         query = """
-            SELECT r.* FROM reminder r
-            INNER JOIN subscription s ON r.subscription_id = s.subscription_id
+            SELECT r.* FROM reminders r
+            INNER JOIN subscriptions s ON r.subscription_id = s.subscription_id
             WHERE s.user_id = %s
             ORDER BY r.reminder_date ASC
         """
@@ -363,7 +366,7 @@ class DatabaseHandler:
             return
 
         params.append(reminder_id)
-        query = f"UPDATE reminder SET {', '.join(updates)} WHERE reminder_id = %s"
+        query = f"UPDATE reminders SET {', '.join(updates)} WHERE reminder_id = %s"
         self.execute_query(query, tuple(params))
 
     def delete_reminder(self, reminder_id: int):
@@ -373,5 +376,5 @@ class DatabaseHandler:
         Args:
             reminder_id: Reminder ID
         """
-        query = "DELETE FROM reminder WHERE reminder_id = %s"
+        query = "DELETE FROM reminders WHERE reminder_id = %s"
         self.execute_query(query, (reminder_id,))
