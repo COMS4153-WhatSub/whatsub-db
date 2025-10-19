@@ -12,44 +12,44 @@ The system manages three main entities:
 
 ### Entity Relationship Diagram
 ```
-user (1) ----< (N) subscription (1) ----< (N) reminder
+users (1) ----< (N) subscriptions (1) ----< (N) reminders
 ```
 
 ### Table Schemas
 
-#### User Table
+#### Users Table
 Stores user information.
 
 | Column      | Type          | Constraints                    | Description                  |
 |-------------|---------------|--------------------------------|------------------------------|
-| user_id     | INT           | PRIMARY KEY, AUTO_INCREMENT    | Unique user identifier       |
+| user_id     | CHAR(36)      | PRIMARY KEY                    | Unique user identifier (UUID)|
 | username    | VARCHAR(100)  | NOT NULL                       | User's username              |
 | email       | VARCHAR(255)  | NOT NULL, UNIQUE               | User's email address         |
 | phone       | VARCHAR(20)   | NULL                           | User's phone number          |
 | created_at  | TIMESTAMP     | DEFAULT CURRENT_TIMESTAMP      | Account creation timestamp   |
 
 **Indexes:**
-- `idx_email`: On email column
+- `idx_email`: On email column (UNIQUE)
 - `idx_username`: On username column
 
 ---
 
-#### Subscription Table
+#### Subscriptions Table
 Stores subscription information for users.
 
-| Column           | Type           | Constraints                           | Description                     |
-|------------------|----------------|---------------------------------------|---------------------------------|
-| subscription_id  | INT            | PRIMARY KEY, AUTO_INCREMENT           | Unique subscription identifier  |
-| user_id          | INT            | NOT NULL, FOREIGN KEY → user.user_id  | Owner of the subscription       |
-| name             | VARCHAR(255)   | NOT NULL                              | Subscription service name       |
-| url              | VARCHAR(500)   | NULL                                  | Subscription service URL        |
-| account          | VARCHAR(255)   | NULL                                  | Account identifier/username     |
-| billing_date     | DATE           | NULL                                  | Next billing date               |
-| price            | DECIMAL(10, 2) | NULL                                  | Subscription price              |
-| created_at       | TIMESTAMP      | DEFAULT CURRENT_TIMESTAMP             | Subscription creation timestamp |
+| Column           | Type           | Constraints                              | Description                     |
+|------------------|----------------|------------------------------------------|---------------------------------|
+| subscription_id  | INT            | PRIMARY KEY, AUTO_INCREMENT              | Unique subscription identifier  |
+| user_id          | CHAR(36)       | NOT NULL, FOREIGN KEY → users.user_id    | Owner of the subscription       |
+| name             | VARCHAR(255)   | NOT NULL                                 | Subscription service name       |
+| url              | VARCHAR(500)   | NULL                                     | Subscription service URL        |
+| account          | VARCHAR(255)   | NULL                                     | Account identifier/username     |
+| billing_date     | DATE           | NULL                                     | Next billing date               |
+| price            | DECIMAL(10, 2) | NULL                                     | Subscription price              |
+| created_at       | TIMESTAMP      | DEFAULT CURRENT_TIMESTAMP                | Subscription creation timestamp |
 
 **Foreign Keys:**
-- `user_id` references `user(user_id)` with `ON DELETE CASCADE`
+- `user_id` references `users(user_id)` with `ON DELETE CASCADE`
 
 **Indexes:**
 - `idx_user_id`: On user_id column
@@ -57,21 +57,21 @@ Stores subscription information for users.
 
 ---
 
-#### Reminder Table
+#### Reminders Table
 Stores reminders for subscriptions.
 
-| Column           | Type                                                      | Constraints                                        | Description                    |
-|------------------|-----------------------------------------------------------|----------------------------------------------------|--------------------------------|
-| reminder_id      | INT                                                       | PRIMARY KEY, AUTO_INCREMENT                        | Unique reminder identifier     |
-| subscription_id  | INT                                                       | NOT NULL, FOREIGN KEY → subscription.subscription_id | Associated subscription       |
-| reminder_type    | ENUM('pre_billing', 'after_payment', 'renewal', 'custom') | NOT NULL                                           | Type of reminder               |
-| reminder_date    | DATETIME                                                  | NOT NULL                                           | When to send the reminder      |
-| message          | TEXT                                                      | NULL                                               | Custom reminder message        |
-| is_sent          | BOOLEAN                                                   | DEFAULT FALSE                                      | Whether reminder has been sent |
-| created_at       | TIMESTAMP                                                 | DEFAULT CURRENT_TIMESTAMP                          | Reminder creation timestamp    |
+| Column           | Type                                                      | Constraints                                            | Description                    |
+|------------------|-----------------------------------------------------------|--------------------------------------------------------|--------------------------------|
+| reminder_id      | INT                                                       | PRIMARY KEY, AUTO_INCREMENT                            | Unique reminder identifier     |
+| subscription_id  | INT                                                       | NOT NULL, FOREIGN KEY → subscriptions.subscription_id  | Associated subscription        |
+| reminder_type    | ENUM('pre_billing', 'after_payment', 'renewal', 'custom') | NOT NULL                                               | Type of reminder               |
+| reminder_date    | DATETIME                                                  | NOT NULL                                               | When to send the reminder      |
+| message          | TEXT                                                      | NULL                                                   | Custom reminder message        |
+| is_sent          | BOOLEAN                                                   | DEFAULT FALSE                                          | Whether reminder has been sent |
+| created_at       | TIMESTAMP                                                 | DEFAULT CURRENT_TIMESTAMP                              | Reminder creation timestamp    |
 
 **Foreign Keys:**
-- `subscription_id` references `subscription(subscription_id)` with `ON DELETE CASCADE`
+- `subscription_id` references `subscriptions(subscription_id)` with `ON DELETE CASCADE`
 
 **Indexes:**
 - `idx_subscription_id`: On subscription_id column
