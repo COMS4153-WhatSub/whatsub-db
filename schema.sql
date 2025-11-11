@@ -24,15 +24,15 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     url VARCHAR(500),
     account VARCHAR(255),
     billing_date DATE,
+    billing_type VARCHAR(255),
     price DECIMAL(10, 2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
     INDEX idx_user_id (user_id),
     INDEX idx_billing_date (billing_date)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Reminders Table
--- Stores reminders for subscriptions
+-- Notification Table
+-- Stores notifications for subscriptions
 CREATE TABLE IF NOT EXISTS reminders (
     reminder_id INT AUTO_INCREMENT PRIMARY KEY,
     subscription_id INT NOT NULL,
