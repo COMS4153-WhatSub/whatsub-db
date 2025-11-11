@@ -23,12 +23,13 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     name VARCHAR(255) NOT NULL,
     url VARCHAR(500),
     account VARCHAR(255),
+    billing_type ENUM ('monthly', 'quarterly', 'annualy') NOT NULL,
     billing_date DATE,
-    billing_type VARCHAR(255),
     price DECIMAL(10, 2),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
-    INDEX idx_billing_date (billing_date)
+    INDEX idx_billing_date (billing_date),
+    INDEX idx_billing_type (billing_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- Notification Table
