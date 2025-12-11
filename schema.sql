@@ -32,18 +32,25 @@ CREATE TABLE IF NOT EXISTS subscriptions (
     INDEX idx_billing_type (billing_type)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
--- Notification Table
+-- Notifications Table
 -- Stores notifications for subscriptions
-CREATE TABLE IF NOT EXISTS reminders (
-    reminder_id INT AUTO_INCREMENT PRIMARY KEY,
-    subscription_id INT NOT NULL,
-    reminder_type ENUM('pre_billing', 'after_payment', 'renewal', 'custom') NOT NULL,
-    reminder_date DATETIME NOT NULL,
-    message TEXT,
-    is_sent BOOLEAN DEFAULT FALSE,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (subscription_id) REFERENCES subscriptions(subscription_id) ON DELETE CASCADE,
-    INDEX idx_subscription_id (subscription_id),
-    INDEX idx_reminder_date (reminder_date),
-    INDEX idx_is_sent (is_sent)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+Create Table: CREATE TABLE `notifications` (
+  `notification_id` int NOT NULL AUTO_INCREMENT,
+  `subscription_id` int NOT NULL,
+  `user_id` varchar(36) COLLATE utf8mb4_unicode_ci NOT NULL,
+  `notification_type` enum('email','sms','push') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'push',
+  `subject` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `message` text COLLATE utf8mb4_unicode_ci,
+  `status` enum('queued','sent','delivered','failed') COLLATE utf8mb4_unicode_ci NOT NULL DEFAULT 'queued',
+  `recipient_email` varchar(255) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `device_token` varchar(500) COLLATE utf8mb4_unicode_ci DEFAULT NULL,
+  `read_at` datetime DEFAULT NULL,
+  `delivered_at` datetime DEFAULT NULL,
+  `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  PRIMARY KEY (`notification_id`),
+  KEY `idx_subscription_id` (`subscription_id`),
+  KEY `idx_user_id` (`user_id`),
+  KEY `idx_status` (`status`),
+  KEY `idx_created_at` (`created_at`)
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci

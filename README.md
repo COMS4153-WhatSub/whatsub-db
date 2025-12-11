@@ -8,12 +8,15 @@ A Python-based database handler for managing user subscriptions and reminders. T
 The system manages three main entities:
 - **Users**: People who have subscriptions
 - **Subscriptions**: Services/products that users subscribe to
-- **Reminders**: Notifications related to subscriptions (e.g., billing reminders)
+- **Notifications**: Notifications sent to users about their subscriptions (e.g., billing reminders)
 
 ### Entity Relationship Diagram
 ```
-users (1) ----< (N) subscriptions (1) ----< (N) reminders
+users (1) ----< (N) subscriptions (1) ----< (N) notifications
+                |                              |
+                +----------< (N) notifications-+
 ```
+Note: Notifications reference both the subscription and the user directly.
 
 ### Table Schemas
 
@@ -37,52 +40,65 @@ Stores user information.
 #### Subscriptions Table
 Stores subscription information for users.
 
-| Column           | Type           | Constraints                              | Description                     |
-|------------------|----------------|------------------------------------------|---------------------------------|
-| subscription_id  | INT            | PRIMARY KEY, AUTO_INCREMENT              | Unique subscription identifier  |
-| user_id          | CHAR(36)       | NOT NULL, FOREIGN KEY → users.user_id    | Owner of the subscription       |
-| name             | VARCHAR(255)   | NOT NULL                                 | Subscription service name       |
-| url              | VARCHAR(500)   | NULL                                     | Subscription service URL        |
-| account          | VARCHAR(255)   | NULL                                     | Account identifier/username     |
-| billing_date     | DATE           | NULL                                     | Next billing date               |
-| price            | DECIMAL(10, 2) | NULL                                     | Subscription price              |
-| created_at       | TIMESTAMP      | DEFAULT CURRENT_TIMESTAMP                | Subscription creation timestamp |
-
-**Foreign Keys:**
-- `user_id` references `users(user_id)` with `ON DELETE CASCADE`
+| Column           | Type                                       | Constraints                              | Description                     |
+|------------------|--------------------------------------------|------------------------------------------|---------------------------------|
+| subscription_id  | INT                                        | PRIMARY KEY, AUTO_INCREMENT              | Unique subscription identifier  |
+| user_id          | CHAR(36)                                   | NOT NULL, FOREIGN KEY → users.user_id    | Owner of the subscription       |
+| name             | VARCHAR(255)                               | NOT NULL                                 | Subscription service name       |
+| url              | VARCHAR(500)                               | NULL                                     | Subscription service URL        |
+| account          | VARCHAR(255)                               | NULL                                     | Account identifier/username     |
+| billing_type     | ENUM('monthly', 'quarterly', 'annualy')    | NOT NULL                                 | Billing frequency               |
+| billing_date     | DATE                                       | NULL                                     | Next billing date               |
+| price            | DECIMAL(10, 2)                             | NULL                                     | Subscription price              |
+| created_at       | TIMESTAMP                                  | DEFAULT CURRENT_TIMESTAMP                | Subscription creation timestamp |
 
 **Indexes:**
 - `idx_user_id`: On user_id column
 - `idx_billing_date`: On billing_date column
+- `idx_billing_type`: On billing_type column
+
+**Billing Types:**
+- `monthly`: Billed every month
+- `quarterly`: Billed every 3 months
+- `annualy`: Billed every year
 
 ---
 
-#### Reminders Table
-Stores reminders for subscriptions.
+#### Notifications Table
+Stores notifications for subscriptions.
 
-| Column           | Type                                                      | Constraints                                            | Description                    |
-|------------------|-----------------------------------------------------------|--------------------------------------------------------|--------------------------------|
-| reminder_id      | INT                                                       | PRIMARY KEY, AUTO_INCREMENT                            | Unique reminder identifier     |
-| subscription_id  | INT                                                       | NOT NULL, FOREIGN KEY → subscriptions.subscription_id  | Associated subscription        |
-| reminder_type    | ENUM('pre_billing', 'after_payment', 'renewal', 'custom') | NOT NULL                                               | Type of reminder               |
-| reminder_date    | DATETIME                                                  | NOT NULL                                               | When to send the reminder      |
-| message          | TEXT                                                      | NULL                                                   | Custom reminder message        |
-| is_sent          | BOOLEAN                                                   | DEFAULT FALSE                                          | Whether reminder has been sent |
-| created_at       | TIMESTAMP                                                 | DEFAULT CURRENT_TIMESTAMP                              | Reminder creation timestamp    |
-
-**Foreign Keys:**
-- `subscription_id` references `subscriptions(subscription_id)` with `ON DELETE CASCADE`
+| Column            | Type                                          | Constraints                                            | Description                         |
+|-------------------|-----------------------------------------------|--------------------------------------------------------|-------------------------------------|
+| notification_id   | INT                                           | PRIMARY KEY, AUTO_INCREMENT                            | Unique notification identifier      |
+| subscription_id   | INT                                           | NOT NULL, FOREIGN KEY → subscriptions.subscription_id  | Associated subscription             |
+| user_id           | VARCHAR(36)                                   | NOT NULL, FOREIGN KEY → users.user_id                  | User to notify                      |
+| notification_type | ENUM('email', 'sms', 'push')                  | NOT NULL, DEFAULT 'push'                               | Delivery channel                    |
+| subject           | VARCHAR(255)                                  | NULL                                                   | Notification subject/title          |
+| message           | TEXT                                          | NULL                                                   | Notification message body           |
+| status            | ENUM('queued', 'sent', 'delivered', 'failed') | NOT NULL, DEFAULT 'queued'                             | Current delivery status             |
+| recipient_email   | VARCHAR(255)                                  | NULL                                                   | Email address for email type        |
+| device_token      | VARCHAR(500)                                  | NULL                                                   | Device token for push notifications |
+| read_at           | DATETIME                                      | NULL                                                   | When notification was read          |
+| delivered_at      | DATETIME                                      | NULL                                                   | When notification was delivered     |
+| created_at        | DATETIME                                      | NOT NULL, DEFAULT CURRENT_TIMESTAMP                    | Notification creation timestamp     |
+| updated_at        | DATETIME                                      | NOT NULL, DEFAULT CURRENT_TIMESTAMP ON UPDATE          | Last update timestamp               |
 
 **Indexes:**
 - `idx_subscription_id`: On subscription_id column
-- `idx_reminder_date`: On reminder_date column
-- `idx_is_sent`: On is_sent column
+- `idx_user_id`: On user_id column
+- `idx_status`: On status column
+- `idx_created_at`: On created_at column
 
-**Reminder Types:**
-- `pre_billing`: Reminder before billing date
-- `after_payment`: Reminder after payment is made
-- `renewal`: Reminder for subscription renewal
-- `custom`: Custom reminder type
+**Notification Types:**
+- `email`: Send via email to recipient_email
+- `sms`: Send via SMS
+- `push`: Send via push notification using device_token
+
+**Status Values:**
+- `queued`: Notification is waiting to be sent
+- `sent`: Notification has been sent
+- `delivered`: Notification was successfully delivered
+- `failed`: Notification delivery failed
 
 ---
 
